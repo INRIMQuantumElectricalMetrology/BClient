@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //

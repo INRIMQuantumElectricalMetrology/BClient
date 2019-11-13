@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -37,7 +37,8 @@
 
 SourceSettings sourceSettings = {.dataPathName = "", .dataFileHandle = NULL };
 LockinSettings lockinSettings = {.lockinDesc = 0};
-ModeSettings modeSettings[MAX_MODES]; 
+ModeSettings modeSettings[MAX_MODES];
+BridgeSettings bridgeSettings;
 
 const char defaultSettingsFileName[] = "bclient.ini";
 char defaultSettingsFile[MAX_PATHNAME_LEN]; 
@@ -66,6 +67,15 @@ void SetDefaultSettings(void)
 	for (int i = 1; i < MAX_MODES; ++i) 
 		SetDefaultModeSettings(i);
 	modeSettings[0] = modeSettings[sourceSettings.activeMode];
+	
+	bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A] = 0;
+	bridgeSettings.channelAssignment[CURRENT_CHANNEL_A] = 1;
+	bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B] = 3;
+	bridgeSettings.channelAssignment[CURRENT_CHANNEL_B] = 2;
+	bridgeSettings.seriesResistance[VOLTAGE_CHANNEL_A] = 10;
+	bridgeSettings.seriesResistance[CURRENT_CHANNEL_A] = 100;
+	bridgeSettings.seriesResistance[VOLTAGE_CHANNEL_B] = 10;
+	bridgeSettings.seriesResistance[CURRENT_CHANNEL_B] = 100;
 }
 
 void SetDefaultModeSettings(int mode) 
@@ -95,6 +105,7 @@ void LoadSettings(char *fileName)
 	strncpy(sourceSettingsTmp.dataPathName, sourceSettings.dataPathName, MAX_PATHNAME_LEN);
 	LockinSettings lockinSettingsTmp = {.lockinDesc = lockinSettings.lockinDesc};
 	ModeSettings modeSettingsTmp[MAX_MODES];
+	BridgeSettings bridgeSettingsTmp;
 	
 	IniText iniText = Ini_New(TRUE); 
 	if (iniText == 0) {
@@ -250,10 +261,51 @@ void LoadSettings(char *fileName)
 		}
 	}
 	
+	if ((ret = Ini_GetInt(iniText, "Bridge", "Voltage channel A", &bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A])) <= 0 ||
+			(ret = Ini_GetInt(iniText, "Bridge", "Current channel A", &bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A])) <= 0 ||
+			(ret = Ini_GetInt(iniText, "Bridge", "Voltage channel B", &bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B])) <= 0 ||
+			(ret = Ini_GetInt(iniText, "Bridge", "Current channel B", &bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B])) <= 0 ||
+			(ret = Ini_GetDouble(iniText, "Bridge", "Voltage channel series resistance A", &bridgeSettingsTmp.seriesResistance[VOLTAGE_CHANNEL_A])) <= 0 ||
+			(ret = Ini_GetDouble(iniText, "Bridge", "Current channel series resistance A", &bridgeSettingsTmp.seriesResistance[CURRENT_CHANNEL_A])) <= 0 ||
+			(ret = Ini_GetDouble(iniText, "Bridge", "Voltage channel series resistance B", &bridgeSettingsTmp.seriesResistance[VOLTAGE_CHANNEL_B])) <= 0 ||
+			(ret = Ini_GetDouble(iniText, "Bridge", "Current channel series resistance B", &bridgeSettingsTmp.seriesResistance[CURRENT_CHANNEL_B])) <= 0) {
+		if (ret == 0)
+			warn("%s %s.\n%s [%s].", msgStrings[MSG_LOADING_ERROR], fileName, 
+				 msgStrings[MSG_SETTINGS_MISSING_PARAMETER], "Bridge");
+		else
+			warn("%s %s.\n%s %s [%s].", msgStrings[MSG_LOADING_ERROR], fileName, GetGeneralErrorString(ret), 
+				 msgStrings[MSG_SETTINGS_SECTION], "Bridge");
+		goto cleanup;
+	}
+	
+	if (bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] < 0 ||
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] > DADSS_CHANNELS-1 ||
+			bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] < 0 ||
+			bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] > DADSS_CHANNELS-1 ||
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] < 0 ||	
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] > DADSS_CHANNELS-1 ||
+			bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B] < 0 ||
+			bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B] > DADSS_CHANNELS-1 ||
+			bridgeSettingsTmp.seriesResistance[VOLTAGE_CHANNEL_A] < 0 ||
+			bridgeSettingsTmp.seriesResistance[CURRENT_CHANNEL_A] < 0 ||
+			bridgeSettingsTmp.seriesResistance[VOLTAGE_CHANNEL_B] < 0 ||
+			bridgeSettingsTmp.seriesResistance[CURRENT_CHANNEL_B] < 0 ||
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] ||
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] ||
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B] ||
+			bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] ||
+			bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B] ||
+			bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B]) {
+				warn("%s %s.\n%s [%s].", msgStrings[MSG_LOADING_ERROR], fileName, 
+					 msgStrings[MSG_SETTINGS_PARAMETER_OUT_OF_RANGE], "Bridge");
+				goto cleanup;
+			}
+
 	sourceSettings = sourceSettingsTmp;
 	lockinSettings = lockinSettingsTmp;
 	for (int j = 0; j < sourceSettingsTmp.nModes; ++j)
 			modeSettings[j] = modeSettingsTmp[j];
+	bridgeSettings = bridgeSettingsTmp;
 
 cleanup:
 	Ini_Dispose(iniText);
@@ -324,6 +376,16 @@ void SaveSettings(char *fileName)
 				goto error;
 		}
 	}
+	
+	if ((ret = Ini_PutInt(iniText, "Bridge", "Voltage channel A", bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A])) < 0 ||
+			(ret = Ini_PutInt(iniText, "Bridge", "Current channel A", bridgeSettings.channelAssignment[CURRENT_CHANNEL_A])) < 0 ||
+			(ret = Ini_PutInt(iniText, "Bridge", "Voltage channel B", bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B])) < 0 ||
+			(ret = Ini_PutInt(iniText, "Bridge", "Current channel B", bridgeSettings.channelAssignment[CURRENT_CHANNEL_B])) < 0 ||
+			(ret = Ini_PutDouble(iniText, "Bridge", "Voltage channel series resistance A", bridgeSettings.seriesResistance[VOLTAGE_CHANNEL_A])) < 0 ||
+			(ret = Ini_PutDouble(iniText, "Bridge", "Current channel series resistance A", bridgeSettings.seriesResistance[CURRENT_CHANNEL_A])) < 0 ||
+			(ret = Ini_PutDouble(iniText, "Bridge", "Voltage channel series resistance B", bridgeSettings.seriesResistance[VOLTAGE_CHANNEL_B])) < 0 ||
+			(ret = Ini_PutDouble(iniText, "Bridge", "Current channel series resistance B", bridgeSettings.seriesResistance[CURRENT_CHANNEL_B])) < 0) 
+		goto error;
 		
 	if ((ret = Ini_WriteToFile(iniText, fileName)) < 0)
 		goto error;

@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -96,6 +96,23 @@ typedef enum {
 	LOCKIN_FILTERS_LINE_NOTCH_IN_BOTH
 } LockinFiltersType;
 
+typedef enum {
+	RESISTANCE,
+	CAPACITANCE,
+	INDUCTANCE,
+	IMPEDANCE,
+	ADMITTANCE
+} ImpedanceType;
+
+typedef enum {
+	VOLTAGE_CHANNEL_A,
+	VOLTAGE_CHANNEL_B,
+	CURRENT_CHANNEL_A,
+	CURRENT_CHANNEL_B,
+	MAIN_CHANNEL_COUNT
+} MainChannelType;
+	
+
 typedef struct {
 	unsigned int nvServer;
 	double clockFrequency;
@@ -149,6 +166,12 @@ typedef struct {
 	char label[LABEL_SZ];
 	ChannelSettings channelSettings[DADSS_CHANNELS];
 } ModeSettings;
+
+typedef struct {
+	int channelAssignment[MAIN_CHANNEL_COUNT];
+	double seriesResistance[MAIN_CHANNEL_COUNT];
+} BridgeSettings;
+
 
 //==============================================================================
 // External variables

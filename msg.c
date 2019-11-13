@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -34,7 +34,7 @@
 
 const char *msgStrings[] = {
 	[MSG_TITLE] = "INRIM Impedance Bridge Client",
-	[MSG_VERSION] = "R2018h",
+	[MSG_VERSION] = "R2019b",
 	[MSG_FATAL_ERROR] = "Fatal error",
 	[MSG_INTERNAL_ERROR] = "Internal error",
 	[MSG_WARNING] = "Warning", 
@@ -65,6 +65,8 @@ const char *msgStrings[] = {
 	[MSG_CANNOT_REMOVE_ACTIVE_MODE] = "Cannot remove active mode",
 	[MSG_POPUP_NEW_FILE_TITLE] = "New",
 	[MSG_POPUP_SAVEAS_FILE_TITLE] = "Save As",
+	[MSG_EQUAL_CHANNELS] = "Channel numbers cannot be equal",
+	[MSG_PRESET_OVERRANGE] = "Voltage values over supported ranges",
 };
 
 //==============================================================================

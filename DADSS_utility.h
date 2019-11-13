@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -46,6 +46,7 @@
 #define DADSS_PHASE_MAX 3.14159265358979
 #define DADSS_ADJ_DELAY 1.0
 #define DADSS_REFERENCE_VOLTAGE 3.0
+#define DADSS_MAX_RMS_OUTPUT_CURRENT 0.1
 
 #ifdef __cplusplus
 	extern "C" {
@@ -55,7 +56,8 @@
 // Types
 
 typedef enum {
-	DADSS_RANGE_1V, 
+	DADSS_OVERRANGE = -1,
+	DADSS_RANGE_1V = 0, 
 	DADSS_RANGE_2V5, 
 	DADSS_RANGE_5V, 
 	DADSS_RANGE_10V
@@ -82,11 +84,13 @@ int DADSS_SetWaveformParametersPolar(int channel, double, double);
 int DADSS_GetWaveformParametersPolar(int channel, double *, double *);
 int DADSS_SetWaveformParametersCartesian(int channel, double, double);
 int DADSS_GetWaveformParametersCartesian(int channel, double *, double *);
+DADSS_RangeList DADSS_GetMinimumRange(double);
 
 //==============================================================================
 // Global variables
 
 extern const double DADSS_RangeMultipliers[];
+extern const double DADSS_RangeMaxAmplitudes[];
 
 #ifdef __cplusplus
 	}

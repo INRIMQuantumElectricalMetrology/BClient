@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -190,7 +190,7 @@ int CVICALLBACK Connect (int panel, int control, int event,
 	
 	switch (event) {
 		case EVENT_COMMIT:
-			if (programState == STATE_IDLE) { // Connect
+			if (programState == STATE_IDLE) { 
 				programState = STATE_CONNECTING;
 				UpdatePanel(panel);
 				
@@ -331,7 +331,11 @@ int CVICALLBACK Connect (int panel, int control, int event,
 						programState = STATE_IDLE;
 						UpdatePanel(panel);
 						return 0;
-					} 							 
+					} 
+					ToRect(modeSettings[0].channelSettings[i].amplitude,
+						   modeSettings[0].channelSettings[i].phase, 
+						   &modeSettings[0].channelSettings[i].real, 
+						   &modeSettings[0].channelSettings[i].imag);
 				}
 				UIERRCHK(ProgressBar_AdvanceMilestone (pbPanel, PANEL_CON1_PROGRESSBAR, 0)); // 8
 				
@@ -599,7 +603,7 @@ int CVICALLBACK SetRange (int panel, int control, int event,
 					modeSettings[0].channelSettings[sourceSettings.activeChannel].phase, 
 				   &modeSettings[0].channelSettings[sourceSettings.activeChannel].real, 
 				   &modeSettings[0].channelSettings[sourceSettings.activeChannel].imag);
-			UpdatePanelWaveformParameters(panel);
+			UpdatePanelActiveChannel(panel);
 			break;
 	}
 
@@ -1066,6 +1070,291 @@ int CVICALLBACK SetSwapDestinationChannel (int panel, int control, int event,
 			break;
 	}
 
+Error:
+	return 0;
+}
+
+int CVICALLBACK SetBridge (int panel, int control, int event,
+						   void *callbackData, int eventData1, int eventData2)
+{
+	BridgeSettings bridgeSettingsTmp;
+	
+	switch (event) {
+		case EVENT_COMMIT:
+			switch (control) {
+				case PANEL_BRI_OK:
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_VOLTAGE_CHANNEL_A, &bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A]));
+					--bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A];
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_CURRENT_CHANNEL_A, &bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A]));
+					--bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A];
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_VOLTAGE_CHANNEL_B, &bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B]));
+					--bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B];
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_CURRENT_CHANNEL_B, &bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B]));
+					--bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B];
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_VOLTAGE_RESISTANCE_A, &bridgeSettingsTmp.seriesResistance[VOLTAGE_CHANNEL_A]));
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_CURRENT_RESISTANCE_A, &bridgeSettingsTmp.seriesResistance[CURRENT_CHANNEL_A]));
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_VOLTAGE_RESISTANCE_B, &bridgeSettingsTmp.seriesResistance[VOLTAGE_CHANNEL_B]));
+					UIERRCHK(GetCtrlVal(panel, PANEL_BRI_CURRENT_RESISTANCE_B, &bridgeSettingsTmp.seriesResistance[CURRENT_CHANNEL_B]));
+					if (bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] ||
+							bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] ||
+							bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B] ||
+							bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] ||
+							bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_A] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B] ||
+							bridgeSettingsTmp.channelAssignment[VOLTAGE_CHANNEL_B] == bridgeSettingsTmp.channelAssignment[CURRENT_CHANNEL_B]) {
+								warn("%s.", msgStrings[MSG_EQUAL_CHANNELS]);
+					} else {
+						bridgeSettings = bridgeSettingsTmp;
+						UIERRCHK(RemovePopup(0));
+					}
+					break;
+				case PANEL_BRI_CANCEL:
+					UIERRCHK(RemovePopup(0));
+					break;
+			}
+			break;
+	}
+	return 0;
+}
+
+int CVICALLBACK PresetBridgeParameters (int panel, int control, int event,
+										void *callbackData, int eventData1, int eventData2)
+{
+	ImpedanceType impedanceTypeA, impedanceTypeB;
+	double RA = 0, tauA = 0, RB = 0, tauB = 0;
+	double CA = 0, DA = 0, CB = 0, DB = 0;
+	double LA = 0, XA = 0, LB = 0, XB = 0; 
+	double GA = 0, BA = 0, GB = 0, BB = 0;
+	double impedanceAMagnitude, impedanceAPhase, impedanceBMagnitude, impedanceBPhase;
+	double impedanceALoadedMagnitude, impedanceALoadedPhase, impedanceBLoadedMagnitude, impedanceBLoadedPhase;
+	double rmsCurrent, currentAmplitude, currentPhase;
+	SourceSettings sourceSettingsTmp = sourceSettings;
+	ModeSettings modeSettingsTmp = modeSettings[0];
+	
+	switch (event) {
+		case EVENT_COMMIT:
+			switch (control) {
+				case PANEL_PRE_IMPEDANCE_A:
+					UIERRCHK(GetCtrlVal(panel, control, (int *) &impedanceTypeA));
+					switch (impedanceTypeA)
+					{
+						case RESISTANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_A, ATTR_LABEL_TEXT, "R ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_LABEL_TEXT, "tau ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_A, "ohm"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_A, "second"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_MIN_VALUE, -INFINITY));
+							break;
+						case CAPACITANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_A, ATTR_LABEL_TEXT, "C ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_LABEL_TEXT, "D ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_A, "farad"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_A, ""));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_MIN_VALUE, 0.0));
+							break;
+						case INDUCTANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_A, ATTR_LABEL_TEXT, "L ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_LABEL_TEXT, "R ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_A, "henry"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_A, "ohm"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_MIN_VALUE, 0.0));
+							break;
+						case IMPEDANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_A, ATTR_LABEL_TEXT, "R ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_LABEL_TEXT, "X ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_A, "ohm"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_A, "ohm"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_MIN_VALUE, -INFINITY));
+							break;
+						case ADMITTANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_A, ATTR_LABEL_TEXT, "G ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_LABEL_TEXT, "B ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_A, "siemens"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_A, "siemens"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_MIN_VALUE, -INFINITY));
+							break;
+					}
+					break;
+				case PANEL_PRE_IMPEDANCE_B:
+					UIERRCHK(GetCtrlVal(panel, control, (int *) &impedanceTypeB));
+					switch (impedanceTypeB)
+					{
+						case RESISTANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_B, ATTR_LABEL_TEXT, "R ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_LABEL_TEXT, "tau ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_B, "ohm"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_B, "second"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_MIN_VALUE, -INFINITY));
+							break;
+						case CAPACITANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_B, ATTR_LABEL_TEXT, "C ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_LABEL_TEXT, "D ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_B, "farad"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_B, ""));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_MIN_VALUE, 0.0));
+							break;
+						case INDUCTANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_B, ATTR_LABEL_TEXT, "L ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_LABEL_TEXT, "R ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_B, "henry"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_B, "ohm"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_MIN_VALUE, 0.0));
+							break;
+						case IMPEDANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_B, ATTR_LABEL_TEXT, "R ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_LABEL_TEXT, "X ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_B, "ohm"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_B, "ohm"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_MIN_VALUE, -INFINITY));
+							break;
+						case ADMITTANCE:
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_PRIMARY_B, ATTR_LABEL_TEXT, "G ="));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_LABEL_TEXT, "B ="));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_PRIMARY_B, "siemens"));
+							UIERRCHK(SetCtrlVal(panel, PANEL_PRE_UNIT_SECONDARY_B, "siemens"));
+							UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_MIN_VALUE, -INFINITY));
+							break;
+					}
+					break;
+				case PANEL_PRE_SET:
+					UIERRCHK(GetCtrlVal(panel, PANEL_PRE_IMPEDANCE_A, (int *) &impedanceTypeA));
+					switch (impedanceTypeA)
+					{
+						case RESISTANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_A, &RA));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_A, &tauA));
+							XA = 2.0*PI*sourceSettings.realFrequency*tauA*RA;
+							break;
+						case CAPACITANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_A, &CA));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_A, &DA));
+							BA = 2.0*PI*sourceSettings.realFrequency*CA;
+							GA = BA*DA;
+							CxDiv(1.0, 0.0, GA, BA, &RA, &XA);
+							break;
+						case INDUCTANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_A, &LA));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_A, &RA));
+							XA = 2.0*PI*sourceSettings.realFrequency*LA;
+							break;
+						case IMPEDANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_A, &RA));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_A, &XA));
+							break;
+						case ADMITTANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_A, &GA));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_A, &BA));
+							CxDiv(1.0, 0.0, GA, BA, &RA, &XA);
+							break;
+					}
+					UIERRCHK(GetCtrlVal(panel, PANEL_PRE_IMPEDANCE_B, (int *) &impedanceTypeB));
+					switch (impedanceTypeB)
+					{
+						case RESISTANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_B, &RB));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_B, &tauB));
+							XB = 2.0*PI*sourceSettings.realFrequency*tauB*RB;
+							break;
+						case CAPACITANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_B, &CB));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_B, &DB));
+							BB = 2.0*PI*sourceSettings.realFrequency*CB;
+							GB = BB*DB;
+							CxDiv(1.0, 0.0, GB, BB, &RB, &XB);
+							break;
+						case INDUCTANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_B, &LB));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_B, &RB));
+							XB = 2.0*PI*sourceSettings.realFrequency*LB;
+							break;
+						case IMPEDANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_B, &RB));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_B, &XB));
+							break;
+						case ADMITTANCE:
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_PRIMARY_B, &GB));
+							UIERRCHK(GetCtrlVal(panel, PANEL_PRE_SECONDARY_B, &BB));
+							CxDiv(1.0, 0.0, GB, BB, &RB, &XB);
+							break;
+					}
+					ToPolar(RA, XA, &impedanceAMagnitude, &impedanceAPhase);
+					ToPolar(RB, XB, &impedanceBMagnitude, &impedanceBPhase);
+					ToPolar(RA+bridgeSettings.seriesResistance[CURRENT_CHANNEL_A], XA, &impedanceALoadedMagnitude, &impedanceALoadedPhase);
+					ToPolar(RB+bridgeSettings.seriesResistance[CURRENT_CHANNEL_B], XB, &impedanceBLoadedMagnitude, &impedanceBLoadedPhase);
+					
+					UIERRCHK(GetCtrlVal(panel, PANEL_PRE_RMS_CURRENT, &rmsCurrent));
+					currentAmplitude = rmsCurrent*sqrt(2.0);
+					currentPhase = -(impedanceAPhase+impedanceBPhase+PI)/2;
+					
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A]].amplitude = \
+							impedanceAMagnitude*currentAmplitude;
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A]].phase = \
+							impedanceAPhase+currentPhase;
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B]].amplitude = \
+							impedanceBMagnitude*currentAmplitude;
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B]].phase = \
+							impedanceBPhase+currentPhase+PI;
+					
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[CURRENT_CHANNEL_A]].amplitude = \
+							impedanceALoadedMagnitude*currentAmplitude;
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[CURRENT_CHANNEL_A]].phase = \
+							impedanceALoadedPhase+currentPhase;
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[CURRENT_CHANNEL_B]].amplitude = \
+							impedanceBLoadedMagnitude*currentAmplitude;
+					modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[CURRENT_CHANNEL_B]].phase = \
+							impedanceBLoadedPhase+currentPhase+PI;
+					
+					DADSS_RangeList tmpRangeA = DADSS_GetMinimumRange(modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A]].amplitude);
+					DADSS_RangeList tmpRangeB = DADSS_GetMinimumRange(modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B]].amplitude);
+					sourceSettingsTmp.range[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A]] = (tmpRangeA > tmpRangeB) ? tmpRangeA : tmpRangeB;
+					sourceSettingsTmp.range[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B]] = sourceSettingsTmp.range[bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A]];
+					
+					tmpRangeA = DADSS_GetMinimumRange(modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[CURRENT_CHANNEL_A]].amplitude);
+					tmpRangeB = DADSS_GetMinimumRange(modeSettingsTmp.channelSettings[bridgeSettings.channelAssignment[CURRENT_CHANNEL_B]].amplitude);
+					sourceSettingsTmp.range[bridgeSettings.channelAssignment[CURRENT_CHANNEL_A]] = (tmpRangeA > tmpRangeB) ? tmpRangeA : tmpRangeB;
+					sourceSettingsTmp.range[bridgeSettings.channelAssignment[CURRENT_CHANNEL_B]] = sourceSettingsTmp.range[bridgeSettings.channelAssignment[CURRENT_CHANNEL_A]];
+
+					for (int i = 0; i < MAIN_CHANNEL_COUNT; ++i) {
+						if (sourceSettingsTmp.range[bridgeSettings.channelAssignment[i]] == DADSS_OVERRANGE) {
+							warn("%s.", msgStrings[MSG_PRESET_OVERRANGE]);
+							return 0;
+						}
+					}
+					
+					sourceSettings = sourceSettingsTmp;
+					modeSettings[0] = modeSettingsTmp;
+					
+					for (int i = 0; i < DADSS_CHANNELS; ++i)
+						DSSERRCHK(DADSS_SetRange(i+1, sourceSettings.range[i]));
+					DSSERRCHK(DADSS_UpdateConfiguration());
+					
+					for (int i = 0; i < DADSS_CHANNELS; ++i) {
+						DSSERRCHK(DADSS_SetRange(i+1, sourceSettings.range[i]));
+						DSSERRCHK(DADSS_SetAmplitude(i+1, modeSettings[0].channelSettings[i].amplitude));
+						DSSERRCHK(DADSS_SetPhase(i+1, modeSettings[0].channelSettings[i].phase));
+					}
+					DSSERRCHK(DADSS_UpdateWaveform());
+				
+					Delay(DADSS_ADJ_DELAY);
+					for (int i = 0; i < DADSS_CHANNELS; ++i) {
+						DSSERRCHK(DADSS_GetAmplitude(i+1, &modeSettings[0].channelSettings[i].amplitude));
+					   	DSSERRCHK(DADSS_GetPhase(i+1, &modeSettings[0].channelSettings[i].phase));
+						ToRect(modeSettings[0].channelSettings[i].amplitude, 
+							   modeSettings[0].channelSettings[i].phase, 
+							   &modeSettings[0].channelSettings[i].real, 
+							   &modeSettings[0].channelSettings[i].imag);
+					} 
+					
+					int mainPanel = (int)callbackData;
+					UpdatePanelActiveChannel(mainPanel);
+					UIERRCHK(RemovePopup(0)); 
+					break;
+				case PANEL_PRE_CANCEL:
+					UIERRCHK(RemovePopup(0));
+					break;
+			}
+			break;
+	}
+	
 Error:
 	return 0;
 }

@@ -41,59 +41,91 @@
 #define  PANEL_LOCKIN_FLOATING            26      /* control type: radioButton, callback function: SetLockinInput */
 #define  PANEL_LOCKIN_COUPLING_AC         27      /* control type: radioButton, callback function: SetLockinInput */
 #define  PANEL_AUTOZERO_LED               28      /* control type: LED, callback function: (none) */
-#define  PANEL_DECORATION_5               29      /* control type: deco, callback function: (none) */
-#define  PANEL_DECORATION_6               30      /* control type: deco, callback function: (none) */
-#define  PANEL_DECORATION_4               31      /* control type: deco, callback function: (none) */
-#define  PANEL_START_STOP                 32      /* control type: command, callback function: StartStop */
-#define  PANEL_START_STOP_LED             33      /* control type: LED, callback function: (none) */
-#define  PANEL_CONNECT                    34      /* control type: command, callback function: Connect */
-#define  PANEL_CONNECT_LED                35      /* control type: LED, callback function: (none) */
-#define  PANEL_TEXTMSG_11                 36      /* control type: textMsg, callback function: (none) */
-#define  PANEL_TEXTMSG_6                  37      /* control type: textMsg, callback function: (none) */
-#define  PANEL_TEXTMSG_10                 38      /* control type: textMsg, callback function: (none) */
-#define  PANEL_TEXTMSG_5                  39      /* control type: textMsg, callback function: (none) */
-#define  PANEL_IS_LOCKED                  40      /* control type: radioButton, callback function: ToggleLock */
-#define  PANEL_TEXTMSG_9                  41      /* control type: textMsg, callback function: (none) */
-#define  PANEL_LABEL                      42      /* control type: string, callback function: SetLabel */
-#define  PANEL_TEXTMSG                    43      /* control type: textMsg, callback function: (none) */
-#define  PANEL_PHASE_ADD_PIHALF           44      /* control type: command, callback function: SetWaveformParameters */
-#define  PANEL_PHASE_SUBTRACT_PIHALF      45      /* control type: command, callback function: SetWaveformParameters */
-#define  PANEL_PHASE_ADD_PI               46      /* control type: command, callback function: SetWaveformParameters */
-#define  PANEL_PHASE_SUBTRACT_PI          47      /* control type: command, callback function: SetWaveformParameters */
-#define  PANEL_ACTIVE_MODE                48      /* control type: ring, callback function: SetActiveMode */
-#define  PANEL_LOCKIN_FILTERS_TYPE        49      /* control type: slide, callback function: SetLockinInput */
-#define  PANEL_LOCKIN_INPUT_TYPE          50      /* control type: slide, callback function: SetLockinInput */
-#define  PANEL_LOCKIN_RESERVE_TYPE        51      /* control type: slide, callback function: SetLockinInput */
-#define  PANEL_LOCKIN_GAIN_TYPE           52      /* control type: slide, callback function: SetLockinInput */
-#define  PANEL_SWAP_ACTIVE_CHANNEL        53      /* control type: command, callback function: SwapActiveChannel */
-#define  PANEL_VERSICAL_LOGO              54      /* control type: picture, callback function: (none) */
-#define  PANEL_SET_MODE                   55      /* control type: command, callback function: SetActiveMode */
-#define  PANEL_TEXTMSG_8                  56      /* control type: textMsg, callback function: (none) */
+#define  PANEL_DECORATION_7               29      /* control type: deco, callback function: (none) */
+#define  PANEL_DECORATION_5               30      /* control type: deco, callback function: (none) */
+#define  PANEL_DECORATION_6               31      /* control type: deco, callback function: (none) */
+#define  PANEL_DECORATION_4               32      /* control type: deco, callback function: (none) */
+#define  PANEL_START_STOP                 33      /* control type: command, callback function: StartStop */
+#define  PANEL_START_STOP_LED             34      /* control type: LED, callback function: (none) */
+#define  PANEL_CONNECT                    35      /* control type: command, callback function: Connect */
+#define  PANEL_CONNECT_LED                36      /* control type: LED, callback function: (none) */
+#define  PANEL_TEXTMSG_11                 37      /* control type: textMsg, callback function: (none) */
+#define  PANEL_TEXTMSG_6                  38      /* control type: textMsg, callback function: (none) */
+#define  PANEL_TEXTMSG_10                 39      /* control type: textMsg, callback function: (none) */
+#define  PANEL_TEXTMSG_5                  40      /* control type: textMsg, callback function: (none) */
+#define  PANEL_IS_LOCKED                  41      /* control type: radioButton, callback function: ToggleLock */
+#define  PANEL_TEXTMSG_9                  42      /* control type: textMsg, callback function: (none) */
+#define  PANEL_LABEL                      43      /* control type: string, callback function: SetLabel */
+#define  PANEL_TEXTMSG                    44      /* control type: textMsg, callback function: (none) */
+#define  PANEL_PHASE_ADD_PIHALF           45      /* control type: command, callback function: SetWaveformParameters */
+#define  PANEL_PHASE_SUBTRACT_PIHALF      46      /* control type: command, callback function: SetWaveformParameters */
+#define  PANEL_PHASE_ADD_PI               47      /* control type: command, callback function: SetWaveformParameters */
+#define  PANEL_PHASE_SUBTRACT_PI          48      /* control type: command, callback function: SetWaveformParameters */
+#define  PANEL_ACTIVE_MODE                49      /* control type: ring, callback function: SetActiveMode */
+#define  PANEL_LOCKIN_FILTERS_TYPE        50      /* control type: slide, callback function: SetLockinInput */
+#define  PANEL_LOCKIN_INPUT_TYPE          51      /* control type: slide, callback function: SetLockinInput */
+#define  PANEL_LOCKIN_RESERVE_TYPE        52      /* control type: slide, callback function: SetLockinInput */
+#define  PANEL_LOCKIN_GAIN_TYPE           53      /* control type: slide, callback function: SetLockinInput */
+#define  PANEL_SWAP_ACTIVE_CHANNEL        54      /* control type: command, callback function: SwapActiveChannel */
+#define  PANEL_VERSICAL_LOGO              55      /* control type: picture, callback function: (none) */
+#define  PANEL_SET_MODE                   56      /* control type: command, callback function: SetActiveMode */
+#define  PANEL_TEXTMSG_8                  57      /* control type: textMsg, callback function: (none) */
 
-#define  PANEL_CON1                       2
+#define  PANEL_BRI                        2
+#define  PANEL_BRI_CURRENT_CHANNEL_B      2       /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_OK                     3       /* control type: command, callback function: SetBridge */
+#define  PANEL_BRI_CANCEL                 4       /* control type: command, callback function: SetBridge */
+#define  PANEL_BRI_CURRENT_RESISTANCE_B   5       /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_VOLTAGE_CHANNEL_B      6       /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_VOLTAGE_RESISTANCE_B   7       /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_CURRENT_CHANNEL_A      8       /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_CURRENT_RESISTANCE_A   9       /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_VOLTAGE_CHANNEL_A      10      /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_VOLTAGE_RESISTANCE_A   11      /* control type: numeric, callback function: (none) */
+#define  PANEL_BRI_TEXTMSG                12      /* control type: textMsg, callback function: (none) */
+
+#define  PANEL_CON1                       3
 #define  PANEL_CON1_PROGRESSBAR           2       /* control type: scale, callback function: (none) */
 
-#define  PANEL_CON2                       3
+#define  PANEL_CON2                       4
 #define  PANEL_CON2_NV_SERVER             2       /* control type: ring, callback function: (none) */
 #define  PANEL_CON2_LOCKIN_GPIB_ADDRESS   3       /* control type: numeric, callback function: (none) */
 #define  PANEL_CON2_CANCEL                4       /* control type: command, callback function: SetConnection */
 #define  PANEL_CON2_OK                    5       /* control type: command, callback function: SetConnection */
 
-#define  PANEL_INFO                       4       /* callback function: ClosePanelInfo */
+#define  PANEL_INFO                       5       /* callback function: ClosePanelInfo */
 #define  PANEL_INFO_PICTURE               2       /* control type: picture, callback function: (none) */
 
-#define  PANEL_MOD                        5
+#define  PANEL_MOD                        6
 #define  PANEL_MOD_ADD                    2       /* control type: command, callback function: SetModes */
 #define  PANEL_MOD_OK                     3       /* control type: command, callback function: SetModes */
 #define  PANEL_MOD_DUPLICATE              4       /* control type: command, callback function: SetModes */
 #define  PANEL_MOD_REMOVE                 5       /* control type: command, callback function: SetModes */
 #define  PANEL_MOD_LIST                   6       /* control type: table, callback function: SetModes */
 
-#define  PANEL_S                          6
+#define  PANEL_PRE                        7
+#define  PANEL_PRE_IMPEDANCE_B            2       /* control type: ring, callback function: PresetBridgeParameters */
+#define  PANEL_PRE_SET                    3       /* control type: command, callback function: PresetBridgeParameters */
+#define  PANEL_PRE_CANCEL                 4       /* control type: command, callback function: PresetBridgeParameters */
+#define  PANEL_PRE_SECONDARY_B            5       /* control type: numeric, callback function: (none) */
+#define  PANEL_PRE_UNIT_SECONDARY_B       6       /* control type: textMsg, callback function: (none) */
+#define  PANEL_PRE_IMPEDANCE_A            7       /* control type: ring, callback function: PresetBridgeParameters */
+#define  PANEL_PRE_RMS_CURRENT            8       /* control type: numeric, callback function: (none) */
+#define  PANEL_PRE_PRIMARY_B              9       /* control type: numeric, callback function: (none) */
+#define  PANEL_PRE_UNIT_PRIMARY_B         10      /* control type: textMsg, callback function: (none) */
+#define  PANEL_PRE_SECONDARY_A            11      /* control type: numeric, callback function: (none) */
+#define  PANEL_PRE_UNIT_SECONDARY_A       12      /* control type: textMsg, callback function: (none) */
+#define  PANEL_PRE_TEXTMSG_2              13      /* control type: textMsg, callback function: (none) */
+#define  PANEL_PRE_PRIMARY_A              14      /* control type: numeric, callback function: (none) */
+#define  PANEL_PRE_UNIT_PRIMARY_A         15      /* control type: textMsg, callback function: (none) */
+#define  PANEL_PRE_TEXTMSG                16      /* control type: textMsg, callback function: (none) */
+#define  PANEL_PRE_TEXTMSG_3              17      /* control type: textMsg, callback function: (none) */
+
+#define  PANEL_S                          8
 #define  PANEL_S_PROGRESSBAR              2       /* control type: scale, callback function: (none) */
 #define  PANEL_S_INTERRUPT                3       /* control type: command, callback function: (none) */
 
-#define  PANEL_SWAP                       7
+#define  PANEL_SWAP                       9
 #define  PANEL_SWAP_LIST                  2       /* control type: table, callback function: (none) */
 #define  PANEL_SWAP_OK                    3       /* control type: command, callback function: SetSwapDestinationChannel */
 #define  PANEL_SWAP_CANCEL                4       /* control type: command, callback function: SetSwapDestinationChannel */
@@ -115,10 +147,15 @@
 #define  MENUBAR_FILE_EXIT                7       /* callback function: FileExit */
 #define  MENUBAR_SETTINGS                 8
 #define  MENUBAR_SETTINGS_CONNECTION      9       /* callback function: SettingsMenu */
-#define  MENUBAR_SETTINGS_MODES           10      /* callback function: SettingsMenu */
-#define  MENUBAR_SETTINGS_LOAD            11      /* callback function: SettingsMenu */
-#define  MENUBAR_SETTINGS_SAVE            12      /* callback function: SettingsMenu */
-#define  MENUBAR_SETTINGS_RESET           13      /* callback function: SettingsMenu */
+#define  MENUBAR_SETTINGS_SEPARATOR_4     10
+#define  MENUBAR_SETTINGS_MODES           11      /* callback function: SettingsMenu */
+#define  MENUBAR_SETTINGS_BRIDGE          12      /* callback function: SettingsMenu */
+#define  MENUBAR_SETTINGS_PRESET          13      /* callback function: SettingsMenu */
+#define  MENUBAR_SETTINGS_SEPARATOR_2     14
+#define  MENUBAR_SETTINGS_LOAD            15      /* callback function: SettingsMenu */
+#define  MENUBAR_SETTINGS_SAVE            16      /* callback function: SettingsMenu */
+#define  MENUBAR_SETTINGS_SEPARATOR       17
+#define  MENUBAR_SETTINGS_RESET           18      /* callback function: SettingsMenu */
 
 
      /* Callback Prototypes: */
@@ -132,10 +169,12 @@ void CVICALLBACK FileExit(int menubar, int menuItem, void *callbackData, int pan
 void CVICALLBACK FileNew(int menubar, int menuItem, void *callbackData, int panel);
 void CVICALLBACK FileSave(int menubar, int menuItem, void *callbackData, int panel);
 int  CVICALLBACK ManagePanel(int panel, int event, void *callbackData, int eventData1, int eventData2);
+int  CVICALLBACK PresetBridgeParameters(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK ReadLockin(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK SetActiveChannel(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK SetActiveMode(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK SetBalanceThreshold(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
+int  CVICALLBACK SetBridge(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK SetConnection(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK SetFrequency(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);
 int  CVICALLBACK SetLabel(int panel, int control, int event, void *callbackData, int eventData1, int eventData2);

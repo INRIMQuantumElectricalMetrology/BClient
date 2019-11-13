@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -68,7 +68,7 @@ void CVICALLBACK FileNew (int menuBar, int menuItem, void *callbackData,
 				UpdatePanel(panel);
         		return;
     		}
-			if (fprintf(sourceSettings.dataFileHandle,"Timestamp\tMode\tFrequency") < 0 || fflush(sourceSettings.dataFileHandle)) {
+			if (fprintf(sourceSettings.dataFileHandle,"Timestamp\tMode\tFrequency\tActive") < 0 || fflush(sourceSettings.dataFileHandle)) {
 				warn("%s %s.", msgStrings[MSG_SAVING_ERROR], sourceSettings.dataPathName);
 				goto Error;	
 			}
@@ -113,7 +113,7 @@ void CVICALLBACK FileSave (int menuBar, int menuItem, void *callbackData,
 	
 	GetCurrentDateTime(&timeStamp);
 	FormatDateTimeString(timeStamp, "%Y%m%dT%H%M%S", timeStampBuf, sizeof timeStampBuf);
-	if (fprintf(sourceSettings.dataFileHandle,"\n%s\t%s\t%.11g", timeStampBuf, modeSettings[0].label, sourceSettings.realFrequency) < 0) {
+	if (fprintf(sourceSettings.dataFileHandle,"\n%s\t%s\t%.11g\t%d", timeStampBuf, modeSettings[0].label, sourceSettings.realFrequency, sourceSettings.activeChannel+1) < 0) {
 		warn("%s %s.", msgStrings[MSG_SAVING_ERROR], sourceSettings.dataPathName);
 		goto Error;
 	}
@@ -127,7 +127,7 @@ void CVICALLBACK FileSave (int menuBar, int menuItem, void *callbackData,
 		dacScale = (modeSettings[0].channelSettings[i].mdac2Val) * \ 
 				   (DADSS_RangeMultipliers[sourceSettings.range[i]]/DADSS_MDAC1_CODE_RANGE) * \
 				   DADSS_REFERENCE_VOLTAGE/nSamples;
-		if (fprintf(sourceSettings.dataFileHandle,"\t%.10g\t%.10g\t%.10g",
+		if (fprintf(sourceSettings.dataFileHandle,"\t% 16.10e\t% 16.10e\t% 16.10e",
 					(xImag[nSamples-1]-xImag[1])*dacScale,
 					(xReal[1]+xReal[nSamples-1])*dacScale,
 					modeSettings[0].channelSettings[i].balanceThreshold) < 0 || fflush(sourceSettings.dataFileHandle)) {
@@ -183,8 +183,42 @@ void CVICALLBACK SettingsMenu (int menuBar, int menuItem, void *callbackData,
 				UIERRCHK(SetTableCellVal(settingsPanel, PANEL_MOD_LIST, MakePoint(1,i), modeSettings[i].label));
 			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_MOD_LIST, ATTR_ENABLE_COLUMN_SIZING, 0));
 			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_MOD_LIST, ATTR_ENABLE_ROW_SIZING, 0));
+			UIERRCHK(SetPanelAttribute(settingsPanel, ATTR_CLOSE_ITEM_VISIBLE, 0));
 			UIERRCHK(InstallPopup(settingsPanel));
 			return;	
+		case MENUBAR_SETTINGS_BRIDGE:
+			UIERRCHK(settingsPanel = LoadPanel(0, panelsFile, PANEL_BRI));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_VOLTAGE_CHANNEL_A, ATTR_MIN_VALUE, 1));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_VOLTAGE_CHANNEL_A, ATTR_MAX_VALUE, DADSS_CHANNELS));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_CURRENT_CHANNEL_A, ATTR_MIN_VALUE, 1));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_CURRENT_CHANNEL_A, ATTR_MAX_VALUE, DADSS_CHANNELS));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_VOLTAGE_CHANNEL_B, ATTR_MIN_VALUE, 1));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_VOLTAGE_CHANNEL_B, ATTR_MAX_VALUE, DADSS_CHANNELS));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_CURRENT_CHANNEL_B, ATTR_MIN_VALUE, 1));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_BRI_CURRENT_CHANNEL_B, ATTR_MAX_VALUE, DADSS_CHANNELS));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_VOLTAGE_CHANNEL_A, bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_A]+1));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_CURRENT_CHANNEL_A, bridgeSettings.channelAssignment[CURRENT_CHANNEL_A]+1));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_VOLTAGE_CHANNEL_B, bridgeSettings.channelAssignment[VOLTAGE_CHANNEL_B]+1));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_CURRENT_CHANNEL_B, bridgeSettings.channelAssignment[CURRENT_CHANNEL_B]+1));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_VOLTAGE_RESISTANCE_A, bridgeSettings.seriesResistance[VOLTAGE_CHANNEL_A]));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_CURRENT_RESISTANCE_A, bridgeSettings.seriesResistance[CURRENT_CHANNEL_A]));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_VOLTAGE_RESISTANCE_B, bridgeSettings.seriesResistance[VOLTAGE_CHANNEL_B]));
+			UIERRCHK(SetCtrlVal(settingsPanel, PANEL_BRI_CURRENT_RESISTANCE_B, bridgeSettings.seriesResistance[CURRENT_CHANNEL_B]));
+			UIERRCHK(InstallPopup(settingsPanel));
+			return;	
+		case MENUBAR_SETTINGS_PRESET:
+			UIERRCHK(settingsPanel = LoadPanel(0, panelsFile, PANEL_PRE));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_PRIMARY_A, ATTR_MIN_VALUE, 0.0));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_PRIMARY_A, ATTR_MAX_VALUE, INFINITY));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_PRIMARY_B, ATTR_MIN_VALUE, 0.0));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_PRIMARY_B, ATTR_MAX_VALUE, INFINITY));
+			UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_A, ATTR_MAX_VALUE, INFINITY));
+			UIERRCHK(SetCtrlAttribute(panel, PANEL_PRE_SECONDARY_B, ATTR_MAX_VALUE, INFINITY));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_RMS_CURRENT, ATTR_MIN_VALUE, 0.0));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_RMS_CURRENT, ATTR_MAX_VALUE, DADSS_MAX_RMS_OUTPUT_CURRENT));
+			UIERRCHK(SetCtrlAttribute(settingsPanel, PANEL_PRE_SET, ATTR_CALLBACK_DATA, (void *)panel));
+			UIERRCHK(InstallPopup(settingsPanel));
+			return;
 		case MENUBAR_SETTINGS_LOAD: 
 			ret = FileSelectPopup("", 
 									"*.ini", 

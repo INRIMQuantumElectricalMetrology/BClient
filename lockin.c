@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -53,17 +53,11 @@ unsigned long ReadLockinRaw(int lockinDesc, LockinReading *lockinReading)
 							pow(10.0,(lockinReading->timeConstantCode-10)/2);
 	lockinReading->adjDelay = AUTOZERO_ADJ_DELAY_FACTOR*lockinReading->timeConstant + AUTOZERO_ADJ_DELAY_BASE;
 		 
-	snprintf(buf, GPIB_BUF_SZ, "OUTP?1");	// Channel X
+	snprintf(buf, GPIB_BUF_SZ, "SNAP?1,2");
 	if ((ret = ibwrt(lockinDesc, buf, strlen(buf))) & ERR ||
 		(ret = ibrd(lockinDesc, buf, GPIB_READ_LEN)) & ERR)
 		return ret;
-	sscanf(buf, "%lf", &lockinReading->real);
-	
-	snprintf(buf, GPIB_BUF_SZ, "OUTP?2");	// Channel Y
-	if ((ret = ibwrt(lockinDesc, buf, strlen(buf))) & ERR ||
-		(ret = ibrd(lockinDesc, buf, GPIB_READ_LEN)) & ERR)
-		return ret;
-	sscanf(buf, "%lf", &lockinReading->imag);
+	sscanf(buf, "%lf,%lf", &lockinReading->real, &lockinReading->imag);
 	
 	return ret;
 }

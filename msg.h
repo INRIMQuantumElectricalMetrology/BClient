@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -91,6 +91,8 @@ enum MESSAGES {
 	MSG_CANNOT_REMOVE_ACTIVE_MODE,
 	MSG_POPUP_NEW_FILE_TITLE,
 	MSG_POPUP_SAVEAS_FILE_TITLE,
+	MSG_EQUAL_CHANNELS,
+	MSG_PRESET_OVERRANGE,
 };
 
 //==============================================================================

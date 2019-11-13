@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -17,7 +17,13 @@
 #include "DA_DSS_cvi_driver.h"
 #include "DADSS_utility.h"
 
-const double DADSS_RangeMultipliers[DADSS_RANGE_COUNT] = {0.5, 1.0, 2.0, 4.0}; 
+const double DADSS_RangeMultipliers[] = {0.5, 1.0, 2.0, 4.0}; 
+const double DADSS_RangeMaxAmplitudes[] = {
+	[DADSS_RANGE_1V] = 1.5, 
+	[DADSS_RANGE_2V5] = 3.0, 
+	[DADSS_RANGE_5V] = 6.0, 
+	[DADSS_RANGE_10V] = 12.0
+};
 
 //==============================================================================
 // Static functions
@@ -67,13 +73,13 @@ int DADSS_SetRange(int channel, DADSS_RangeList range)
 				(ret = DADSS_SetRangeMDAC2(channel, 1)) < 0)	// Range MDAC2 x2
 				return ret;
 			break;
-		default:
-			return -2;
+		case DADSS_OVERRANGE:
+			return -1;
 	}
 	return 0;
 }
 
-/// HIFN  Reads waveform parameters from the source in polar form (amplitude and phase)
+/// HIFN  Read waveform parameters from the source in polar form (amplitude and phase)
 /// HIPAR channel/Channel number
 /// HIPAR amplitude/
 /// HIPAR phase/
@@ -88,7 +94,7 @@ int DADSS_GetWaveformParametersPolar(int channel, double *amplitude, double *pha
 	return 0;
 }
 
-/// HIFN  Sets waveform parameters in polar form (amplitude and phase)
+/// HIFN  Set waveform parameters in polar form (amplitude and phase)
 /// HIPAR channel/Channel number
 /// HIPAR amplitude/
 /// HIPAR phase/
@@ -103,7 +109,7 @@ int DADSS_SetWaveformParametersPolar(int channel, double amplitude, double phase
 	return 0;
 }
 
-/// HIFN Reads waveform parameters from the source in cartesian form 
+/// HIFN Read waveform parameters from the source in cartesian form 
 /// HIFN (real, in phase, part and imaginary, quadrature, part)
 /// HIPAR channel/Channel number
 /// HIPAR real/
@@ -121,7 +127,7 @@ int DADSS_GetWaveformParametersCartesian(int channel, double *real, double *imag
 	return 0;
 }
 
-/// HIFN Sets waveform parameters from the source in cartesian form 
+/// HIFN Set waveform parameters from the source in cartesian form 
 /// HIFN (real and imaginary parts)
 /// HIPAR channel/Channel number
 /// HIPAR real/Real (in-phase) part
@@ -138,3 +144,26 @@ int DADSS_SetWaveformParametersCartesian(int channel, double real, double imag)
 		return ret;
 	return 0;
 }
+
+
+/// HIFN Get a suitable range for a given amplitude to be generated
+/// HIPAR amplitude/Amplitude to be generated
+/// HIRET The return value is the minimum range needed to generate a
+/// HIRET a sine wave with the given amplitude or DADSS_OVERRANGE if
+/// HIRET non can be found
+DADSS_RangeList DADSS_GetMinimumRange(double amplitude)
+{
+	amplitude = fabs(amplitude);
+	
+	if (amplitude < DADSS_RangeMaxAmplitudes[DADSS_RANGE_1V])
+		return DADSS_RANGE_1V;
+	else if (amplitude < DADSS_RangeMaxAmplitudes[DADSS_RANGE_2V5])
+		return DADSS_RANGE_2V5;
+	else if (amplitude < DADSS_RangeMaxAmplitudes[DADSS_RANGE_5V])
+		return DADSS_RANGE_5V;
+	else if (amplitude < DADSS_RangeMaxAmplitudes[DADSS_RANGE_10V])
+		return DADSS_RANGE_10V;
+	else
+		return DADSS_OVERRANGE;
+}
+

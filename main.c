@@ -2,8 +2,8 @@
 //
 // VersICaL impedance bridge client
 //
-// Copyright 2018 Massimo Ortolano <massimo.ortolano@polito.it> 
-//                Martina Marzano <martina.marzano@polito.it>
+// Copyright 2018-2019	Massimo Ortolano <massimo.ortolano@polito.it> 
+//                		Martina Marzano <m.marzano@inrim.it>
 //
 // This code is licensed under MIT license (see LICENSE.txt for details)
 //
@@ -167,18 +167,13 @@ void UpdatePanel(int panel)
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_CONNECTION, ATTR_DIMMED, 0));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_LOAD, ATTR_DIMMED, 0));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_RESET, ATTR_DIMMED, 0));
+			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_PRESET, ATTR_DIMMED, 1));
 			break;
 		case STATE_CONNECTING:
 			UIERRCHK(SetPanelAttribute(panel,ATTR_DIMMED, 1));
-//			UIERRCHK(SetCtrlAttribute(panel, PANEL_CONNECT, ATTR_DIMMED, 1));
 			UIERRCHK(SetCtrlVal(panel, PANEL_CONNECT_LED, 0));
-//			UIERRCHK(SetCtrlAttribute(panel, PANEL_ACTIVE_MODE, ATTR_DIMMED, 1));
-//			UIERRCHK(SetCtrlAttribute(panel, PANEL_SET_MODE, ATTR_DIMMED, 1));
-//			UIERRCHK(SetCtrlAttribute(panel, PANEL_CLOCKFREQUENCY, ATTR_DIMMED, 1));
-//			UIERRCHK(SetCtrlAttribute(panel, PANEL_FREQUENCY, ATTR_DIMMED, 1));
 			UIERRCHK(SetCtrlAttribute(panel, PANEL_REAL_FREQUENCY, ATTR_TEXT_STRIKEOUT, 1));
 			UIERRCHK(SetCtrlVal(panel, PANEL_START_STOP_LED, 0));
-//			UIERRCHK(SetCtrlAttribute(panel, PANEL_START_STOP, ATTR_DIMMED, 1));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_FILE, ATTR_DIMMED, 1));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS, ATTR_DIMMED, 1));
 			break;
@@ -200,6 +195,7 @@ void UpdatePanel(int panel)
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_CONNECTION, ATTR_DIMMED, 1)); 
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_LOAD, ATTR_DIMMED, 1));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_RESET, ATTR_DIMMED, 1));
+			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_PRESET, ATTR_DIMMED, 0));
 			UIERRCHK(SetCtrlVal(panel, PANEL_START_STOP_LED, 0));
 			break;
 		case STATE_RUNNING_UP:
@@ -210,6 +206,8 @@ void UpdatePanel(int panel)
 			UIERRCHK(SetCtrlAttribute(panel, PANEL_REAL_FREQUENCY, ATTR_TEXT_STRIKEOUT, 0));
 			UIERRCHK(SetCtrlVal(panel, PANEL_CONNECT_LED, 1));
 			UIERRCHK(SetCtrlVal(panel, PANEL_START_STOP_LED, 1));
+			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_FILE, ATTR_DIMMED, 1));
+			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS, ATTR_DIMMED, 1));
 			break;
 		case STATE_RUNNING:
 			UIERRCHK(SetPanelAttribute(panel, ATTR_DIMMED, 0));
@@ -234,6 +232,7 @@ void UpdatePanel(int panel)
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_CONNECTION, ATTR_DIMMED, 1));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_LOAD, ATTR_DIMMED, 1));
 			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_RESET, ATTR_DIMMED, 1));
+			UIERRCHK(SetMenuBarAttribute(menuBar, MENUBAR_SETTINGS_PRESET, ATTR_DIMMED, 1));
 			UIERRCHK(SetCtrlVal(panel, PANEL_START_STOP_LED, 1));
 			break;
 	}
